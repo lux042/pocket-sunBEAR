@@ -12,6 +12,8 @@ Supported sources:
 
 When **Download available PDFs** is enabled, Pocket sunBEAR downloads direct, authorized PDFs and validates each file before saving it. Downloads appear in the app's **Downloads** tab and in **Files → On My iPhone → Pocket sunBEAR → Pocket sunBEAR PDFs**. Sources that require login, institutional access, or publisher interaction remain available through their source-record links.
 
+EndNote (`.enw`) and TSV exports are saved in **Files → On My iPhone → Pocket sunBEAR → Pocket sunBEAR Exports** and are also presented in the iOS share sheet.
+
 ## Development
 
 Open `PocketSunBEAR.xcodeproj` in Xcode and run the `PocketSunBEAR` scheme on an iOS 18 or newer iPhone/iPad simulator or device.

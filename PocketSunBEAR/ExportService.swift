@@ -25,7 +25,11 @@ enum ExportService {
 
     static func temporaryFile(name: String, extension ext: String, contents: String) throws -> URL {
         let safe = name.replacingOccurrences(of: #"[^A-Za-z0-9._ -]"#, with: "-", options: .regularExpression)
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent("\(safe).\(ext)")
+        let manager = FileManager.default
+        let documents = manager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let folder = documents.appendingPathComponent("Pocket sunBEAR Exports", isDirectory: true)
+        try manager.createDirectory(at: folder, withIntermediateDirectories: true)
+        let url = folder.appendingPathComponent("\(safe.isEmpty ? "export" : safe).\(ext)")
         try contents.write(to: url, atomically: true, encoding: .utf8)
         return url
     }

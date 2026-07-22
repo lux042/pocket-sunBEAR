@@ -74,8 +74,7 @@ private struct DownloadedPDF: Identifiable {
 private struct DownloadsView: View {
     @Query private var items: [ResearchItem]
     @State private var search = ""
-    @State private var shareItems: [Any] = []
-    @State private var showingShare = false
+    @State private var sharePayload: SharePayload?
 
     private var downloads: [DownloadedPDF] {
         items.flatMap { item in
@@ -109,18 +108,17 @@ private struct DownloadsView: View {
         .searchable(text: $search, prompt: "Title, source, or filename")
         .toolbar {
             if !downloads.isEmpty {
-                Button { shareItems = downloads.compactMap(\.url); showingShare = true } label: {
+                Button { sharePayload = SharePayload(downloads.compactMap(\.url)) } label: {
                     Label("Share All", systemImage: "square.and.arrow.up")
                 }
             }
         }
-        .sheet(isPresented: $showingShare) { ShareSheet(items: shareItems) }
+        .sheet(item: $sharePayload) { ShareSheet(items: $0.items) }
     }
 
     private func share(_ download: DownloadedPDF) {
         guard let url = download.url else { return }
-        shareItems = [url]
-        showingShare = true
+        sharePayload = SharePayload([url])
     }
 }
 
@@ -243,8 +241,8 @@ private struct SessionView: View {
     let session: ResearchSession
     @Query(sort: \LibraryCollection.name) private var collections: [LibraryCollection]
     @State private var recordSearch = ""
-    @State private var shareItems: [Any] = []
-    @State private var showingShare = false
+    @State private var sharePayload: SharePayload?
+    @State private var exportError: String?
     @State private var showingRename = false
     @State private var renameText = ""
 
@@ -278,21 +276,23 @@ private struct SessionView: View {
             Button("Cancel", role: .cancel) {}
             Button("Rename") { session.name = renameText.trimmingCharacters(in: .whitespacesAndNewlines) }
         }
-        .sheet(isPresented: $showingShare) { ShareSheet(items: shareItems) }
+        .sheet(item: $sharePayload) { ShareSheet(items: $0.items) }
+        .alert("Could not create export", isPresented: Binding(get: { exportError != nil }, set: { if !$0 { exportError = nil } })) {
+            Button("OK") { exportError = nil }
+        } message: { Text(exportError ?? "Unknown export error") }
     }
 
     private func share(kind: String) {
         do {
             let url = kind == "EndNote" ? try ExportService.temporaryFile(name: session.name, extension: "enw", contents: ExportService.endNote(session.items)) : try ExportService.temporaryFile(name: session.name, extension: "tsv", contents: ExportService.tsv(session.items))
-            shareItems = [url]; showingShare = true
-        } catch {}
+            sharePayload = SharePayload([url])
+        } catch { exportError = error.localizedDescription }
     }
 }
 
 private struct ItemView: View {
     let item: ResearchItem
-    @State private var shareItems: [Any] = []
-    @State private var showingShare = false
+    @State private var sharePayload: SharePayload?
 
     private var pdfFiles: [URL] { item.localPDFPaths.compactMap(PDFDownloadService.fileURL(for:)) }
     var body: some View {
@@ -301,12 +301,12 @@ private struct ItemView: View {
             if !pdfFiles.isEmpty {
                 Section("PDFs") {
                     ForEach(pdfFiles, id: \.path) { file in
-                        Button { shareItems = [file]; showingShare = true } label: {
+                        Button { sharePayload = SharePayload([file]) } label: {
                             Label(file.lastPathComponent, systemImage: "doc.richtext")
                         }
                     }
                     if pdfFiles.count > 1 {
-                        Button("Share All PDFs") { shareItems = pdfFiles; showingShare = true }
+                        Button("Share All PDFs") { sharePayload = SharePayload(pdfFiles) }
                     }
                 }
             } else if !item.pdfDownloadError.isEmpty {
@@ -320,6 +320,6 @@ private struct ItemView: View {
             if let url = URL(string: item.recordURL) { Section { Link(pdfFiles.isEmpty ? "Open source record to check access" : "Open source record", destination: url) } }
         }
         .navigationTitle(item.title).navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingShare) { ShareSheet(items: shareItems) }
+        .sheet(item: $sharePayload) { ShareSheet(items: $0.items) }
     }
 }
