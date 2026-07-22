@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var pendingImport: (html: String, url: URL)?
     @State private var scraper = ScrapeCoordinator()
     @State private var requestedPageCount = 1
+    @State private var shouldDownloadPDFs = true
 
     var body: some View {
         TabView {
@@ -22,6 +23,9 @@ struct ContentView: View {
                             Label("Open \(selectedSource.title)", systemImage: "safari")
                         }
                         Stepper("Search pages: \(requestedPageCount)", value: $requestedPageCount, in: 1...ScrapeCoordinator.maximumSearchPages)
+                        Toggle("Download available PDFs", isOn: $shouldDownloadPDFs)
+                        Text("Open-access PDFs download automatically. Login or publisher-only files remain available through the source record.")
+                            .font(.caption).foregroundStyle(.secondary)
                         Text("Search the source, then tap Import. Pocket sunBEAR saves metadata only—no PDFs.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
@@ -51,7 +55,7 @@ struct ContentView: View {
         .onChange(of: pendingImport?.url) { _, _ in
             guard let pendingImport else { return }
             self.pendingImport = nil
-            Task { await scraper.importSearch(html: pendingImport.html, url: pendingImport.url, source: selectedSource, pageLimit: requestedPageCount, context: context) }
+            Task { await scraper.importSearch(html: pendingImport.html, url: pendingImport.url, source: selectedSource, pageLimit: requestedPageCount, downloadPDFs: shouldDownloadPDFs, context: context) }
         }
     }
 }
@@ -153,12 +157,17 @@ private struct LibraryView: View {
 
 private struct SessionLink: View {
     let session: ResearchSession
+    private var pdfCount: Int { session.items.reduce(0) { $0 + $1.localPDFPaths.count } }
     var body: some View {
         NavigationLink { SessionView(session: session) } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.name).lineLimit(2)
                 Text("\(session.sourceName) · \(session.items.count) records · \(session.pagesScraped) page\(session.pagesScraped == 1 ? "" : "s")")
                     .font(.caption).foregroundStyle(.secondary)
+                if pdfCount > 0 {
+                    Label("\(pdfCount) PDF\(pdfCount == 1 ? "" : "s")", systemImage: "arrow.down.doc.fill")
+                        .font(.caption2).foregroundStyle(.green)
+                }
                 Text(session.createdAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())
                     .font(.caption2).foregroundStyle(.tertiary)
             }
@@ -218,12 +227,35 @@ private struct SessionView: View {
 
 private struct ItemView: View {
     let item: ResearchItem
+    @State private var shareItems: [Any] = []
+    @State private var showingShare = false
+
+    private var pdfFiles: [URL] { item.localPDFPaths.compactMap(PDFDownloadService.fileURL(for:)) }
     var body: some View {
         Form {
             Section { LabeledContent("Identifier", value: item.identifier); LabeledContent("Type", value: item.documentType); LabeledContent("Collection", value: item.collection); LabeledContent("Date", value: item.publicationDate) }
+            if !pdfFiles.isEmpty {
+                Section("PDFs") {
+                    ForEach(pdfFiles, id: \.path) { file in
+                        Button { shareItems = [file]; showingShare = true } label: {
+                            Label(file.lastPathComponent, systemImage: "doc.richtext")
+                        }
+                    }
+                    if pdfFiles.count > 1 {
+                        Button("Share All PDFs") { shareItems = pdfFiles; showingShare = true }
+                    }
+                }
+            } else if !item.pdfDownloadError.isEmpty {
+                Section("PDF") {
+                    Label("Automatic download unavailable", systemImage: "exclamationmark.triangle")
+                        .foregroundStyle(.orange)
+                    Text(item.pdfDownloadError).font(.caption).foregroundStyle(.secondary)
+                }
+            }
             if !item.abstractText.isEmpty { Section("Abstract / description") { Text(item.abstractText).textSelection(.enabled) } }
-            if let url = URL(string: item.recordURL) { Section { Link("Open source record", destination: url) } }
+            if let url = URL(string: item.recordURL) { Section { Link(pdfFiles.isEmpty ? "Open source record to check access" : "Open source record", destination: url) } }
         }
         .navigationTitle(item.title).navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingShare) { ShareSheet(items: shareItems) }
     }
 }

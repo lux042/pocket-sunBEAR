@@ -10,8 +10,9 @@ final class ScrapeCoordinator {
     var completed = 0
     var total = 0
     private let loader = WebLoader()
+    private let pdfDownloader = PDFDownloadService()
 
-    func importSearch(html: String, url: URL, source: ResearchSource, pageLimit: Int, context: ModelContext) async {
+    func importSearch(html: String, url: URL, source: ResearchSource, pageLimit: Int, downloadPDFs: Bool, context: ModelContext) async {
         guard !isRunning else { return }
         isRunning = true
         defer { isRunning = false }
@@ -53,15 +54,29 @@ final class ScrapeCoordinator {
             do {
                 let (detailHTML, finalURL) = try await loader.html(at: link)
                 var document = source.document(from: detailHTML, url: finalURL)
-                document.pdfURLs = []
+                if source == .pubmed,
+                   let pmcURL = PubMedHTMLParser.pmcArticleURL(in: detailHTML, baseURL: finalURL),
+                   let (pmcHTML, pmcFinalURL) = try? await loader.html(at: pmcURL) {
+                    document.pdfURLs.append(contentsOf: PubMedHTMLParser.pdfURLs(in: pmcHTML, baseURL: pmcFinalURL))
+                    document.pdfURLs = Array(Set(document.pdfURLs)).sorted { $0.absoluteString < $1.absoluteString }
+                }
                 let item = ResearchItem(document: document, session: session)
                 context.insert(item)
+                if downloadPDFs, !document.pdfURLs.isEmpty {
+                    status = "Downloading PDF for \(completed + 1) of \(total)…"
+                    let result = await pdfDownloader.download(document.pdfURLs, title: item.title, identifier: item.identifier, referer: finalURL)
+                    item.localPDFPaths = result.paths
+                    item.pdfDownloadError = result.errors.joined(separator: "\n")
+                }
                 completed += 1
             } catch {
                 status = "Skipped one record: \(error.localizedDescription)"
             }
         }
         try? context.save()
-        status = "Saved \(completed) metadata records."
+        let pdfCount = session.items.reduce(0) { $0 + $1.localPDFPaths.count }
+        status = downloadPDFs
+            ? "Saved \(completed) records and \(pdfCount) PDF\(pdfCount == 1 ? "" : "s")."
+            : "Saved \(completed) metadata records."
     }
 }

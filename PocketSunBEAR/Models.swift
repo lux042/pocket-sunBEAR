@@ -5,7 +5,6 @@ import SwiftData
 final class LibraryCollection {
     var name: String
     var createdAt: Date
-    var pagesScraped: Int = 1
     @Relationship(deleteRule: .nullify, inverse: \ResearchSession.libraryCollection) var sessions: [ResearchSession]
 
     init(name: String, createdAt: Date = .now, sessions: [ResearchSession] = []) {
@@ -21,6 +20,7 @@ final class ResearchSession {
     var sourceName: String
     var searchURL: String
     var createdAt: Date
+    var pagesScraped: Int = 1
     var libraryCollection: LibraryCollection?
     @Relationship(deleteRule: .cascade, inverse: \ResearchItem.session) var items: [ResearchItem]
 
@@ -46,6 +46,8 @@ final class ResearchItem {
     var recordURL: String
     var abstractText: String
     var pageCount: Int
+    var localPDFPaths: [String] = []
+    var pdfDownloadError: String = ""
     var session: ResearchSession?
 
     init(document: ScrapedDocument, session: ResearchSession? = nil) {
