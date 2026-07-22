@@ -75,6 +75,7 @@ private struct DownloadsView: View {
     @Query(sort: \ResearchSession.createdAt, order: .reverse) private var sessions: [ResearchSession]
     @State private var search = ""
     @State private var sharePayload: SharePayload?
+    @State private var expandedSessions = Set<PersistentIdentifier>()
 
     private func downloads(for session: ResearchSession) -> [DownloadedPDF] {
         let sessionMatches = !search.isEmpty && session.name.localizedCaseInsensitiveContains(search)
@@ -98,7 +99,7 @@ private struct DownloadsView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             ForEach(displayedSessions) { session in
-                Section {
+                DisclosureGroup(isExpanded: expansionBinding(for: session)) {
                     Button { sharePayload = SharePayload(downloads(for: session).compactMap(\.url)) } label: {
                         Label("Share this session’s PDFs", systemImage: "square.and.arrow.up")
                     }
@@ -114,11 +115,12 @@ private struct DownloadsView: View {
                             }
                         }
                     }
-                } header: {
+                } label: {
                     HStack {
                         Label(session.name, systemImage: "folder.fill")
                         Spacer()
                         Text("\(downloads(for: session).count)")
+                            .font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }
@@ -139,6 +141,16 @@ private struct DownloadsView: View {
     private func share(_ download: DownloadedPDF) {
         guard let url = download.url else { return }
         sharePayload = SharePayload([url])
+    }
+
+    private func expansionBinding(for session: ResearchSession) -> Binding<Bool> {
+        Binding(
+            get: { expandedSessions.contains(session.persistentModelID) },
+            set: { expanded in
+                if expanded { expandedSessions.insert(session.persistentModelID) }
+                else { expandedSessions.remove(session.persistentModelID) }
+            }
+        )
     }
 }
 
