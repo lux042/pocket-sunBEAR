@@ -14,7 +14,7 @@ struct PDFDownloadService {
         }
     }
 
-    func download(_ urls: [URL], title: String, identifier: String, referer: URL) async -> (paths: [String], errors: [String]) {
+    func download(_ urls: [URL], title: String, identifier: String, sessionName: String, referer: URL) async -> (paths: [String], errors: [String]) {
         guard !urls.isEmpty else { return ([], []) }
         let cookies = await websiteCookies()
         var paths: [String] = []
@@ -34,7 +34,7 @@ struct PDFDownloadService {
                 guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { throw DownloadError.invalidResponse }
                 guard isPDF(at: temporaryURL) else { throw DownloadError.notPDF }
 
-                let relativePath = try save(temporaryURL, title: title, identifier: identifier, index: index)
+                let relativePath = try save(temporaryURL, title: title, identifier: identifier, sessionName: sessionName, index: index)
                 paths.append(relativePath)
             } catch {
                 errors.append("\(url.host ?? "Source"): \(error.localizedDescription)")
@@ -49,10 +49,12 @@ struct PDFDownloadService {
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
     }
 
-    private func save(_ temporaryURL: URL, title: String, identifier: String, index: Int) throws -> String {
+    private func save(_ temporaryURL: URL, title: String, identifier: String, sessionName: String, index: Int) throws -> String {
         let manager = FileManager.default
         let documents = manager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        let folder = documents.appendingPathComponent("Pocket sunBEAR PDFs", isDirectory: true)
+        let root = documents.appendingPathComponent("Pocket sunBEAR PDFs", isDirectory: true)
+        let sessionFolder = safeFilename(sessionName)
+        let folder = root.appendingPathComponent(sessionFolder, isDirectory: true)
         try manager.createDirectory(at: folder, withIntermediateDirectories: true)
         let base = safeFilename(identifier.isEmpty ? title : identifier)
         let suffix = index == 0 ? "" : "-\(index + 1)"
@@ -63,7 +65,7 @@ struct PDFDownloadService {
             duplicate += 1
         }
         try manager.moveItem(at: temporaryURL, to: destination)
-        return "Pocket sunBEAR PDFs/\(destination.lastPathComponent)"
+        return "Pocket sunBEAR PDFs/\(sessionFolder)/\(destination.lastPathComponent)"
     }
 
     private func isPDF(at url: URL) -> Bool {

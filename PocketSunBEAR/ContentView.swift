@@ -72,17 +72,24 @@ private struct DownloadedPDF: Identifiable {
 }
 
 private struct DownloadsView: View {
-    @Query private var items: [ResearchItem]
+    @Query(sort: \ResearchSession.createdAt, order: .reverse) private var sessions: [ResearchSession]
     @State private var search = ""
     @State private var sharePayload: SharePayload?
 
-    private var downloads: [DownloadedPDF] {
-        items.flatMap { item in
+    private func downloads(for session: ResearchSession) -> [DownloadedPDF] {
+        let sessionMatches = !search.isEmpty && session.name.localizedCaseInsensitiveContains(search)
+        return session.items.flatMap { item in
             item.localPDFPaths.map { DownloadedPDF(path: $0, title: item.title, source: item.contentType) }
         }
-        .filter { search.isEmpty || $0.title.localizedCaseInsensitiveContains(search) || $0.path.localizedCaseInsensitiveContains(search) || $0.source.localizedCaseInsensitiveContains(search) }
+        .filter { search.isEmpty || sessionMatches || $0.title.localizedCaseInsensitiveContains(search) || $0.path.localizedCaseInsensitiveContains(search) || $0.source.localizedCaseInsensitiveContains(search) }
         .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
     }
+
+    private var displayedSessions: [ResearchSession] {
+        sessions.filter { !downloads(for: $0).isEmpty }
+    }
+
+    private var allDownloads: [DownloadedPDF] { displayedSessions.flatMap(downloads(for:)) }
 
     var body: some View {
         List {
@@ -90,25 +97,38 @@ private struct DownloadsView: View {
                 Label("Also available in Files → On My iPhone → Pocket sunBEAR → Pocket sunBEAR PDFs", systemImage: "folder")
                     .font(.caption).foregroundStyle(.secondary)
             }
-            ForEach(downloads) { download in
-                Button { share(download) } label: {
-                    HStack {
-                        Image(systemName: "doc.richtext.fill").foregroundStyle(.red)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(download.title).foregroundStyle(.primary).lineLimit(2)
-                            Text("\(download.source) · \((download.path as NSString).lastPathComponent)")
-                                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            ForEach(displayedSessions) { session in
+                Section {
+                    Button { sharePayload = SharePayload(downloads(for: session).compactMap(\.url)) } label: {
+                        Label("Share this session’s PDFs", systemImage: "square.and.arrow.up")
+                    }
+                    ForEach(downloads(for: session)) { download in
+                        Button { share(download) } label: {
+                            HStack {
+                                Image(systemName: "doc.richtext.fill").foregroundStyle(.red)
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(download.title).foregroundStyle(.primary).lineLimit(2)
+                                    Text("\(download.source) · \((download.path as NSString).lastPathComponent)")
+                                        .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                }
+                            }
                         }
+                    }
+                } header: {
+                    HStack {
+                        Label(session.name, systemImage: "folder.fill")
+                        Spacer()
+                        Text("\(downloads(for: session).count)")
                     }
                 }
             }
         }
-        .overlay { if downloads.isEmpty { ContentUnavailableView(search.isEmpty ? "No PDFs downloaded" : "No matching PDFs", systemImage: "arrow.down.doc") } }
+        .overlay { if displayedSessions.isEmpty { ContentUnavailableView(search.isEmpty ? "No PDFs downloaded" : "No matching PDFs", systemImage: "arrow.down.doc") } }
         .navigationTitle("Downloads")
         .searchable(text: $search, prompt: "Title, source, or filename")
         .toolbar {
-            if !downloads.isEmpty {
-                Button { sharePayload = SharePayload(downloads.compactMap(\.url)) } label: {
+            if !allDownloads.isEmpty {
+                Button { sharePayload = SharePayload(allDownloads.compactMap(\.url)) } label: {
                     Label("Share All", systemImage: "square.and.arrow.up")
                 }
             }

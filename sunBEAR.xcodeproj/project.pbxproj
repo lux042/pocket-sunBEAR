@@ -24,9 +24,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		6745B524300BD83C002CBDB1 /* PocketSunBEAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PocketSunBEAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		6745B533300BD83E002CBDB1 /* PocketSunBEARTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketSunBEARTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		6745B53D300BD83E002CBDB1 /* PocketSunBEARUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = PocketSunBEARUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6745B524300BD83C002CBDB1 /* sunBEAR.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = sunBEAR.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6745B533300BD83E002CBDB1 /* sunBEARTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = sunBEARTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		6745B53D300BD83E002CBDB1 /* sunBEARUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = sunBEARUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -85,9 +85,9 @@
 		6745B525300BD83C002CBDB1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				6745B524300BD83C002CBDB1 /* PocketSunBEAR.app */,
-				6745B533300BD83E002CBDB1 /* PocketSunBEARTests.xctest */,
-				6745B53D300BD83E002CBDB1 /* PocketSunBEARUITests.xctest */,
+				6745B524300BD83C002CBDB1 /* sunBEAR.app */,
+				6745B533300BD83E002CBDB1 /* sunBEARTests.xctest */,
+				6745B53D300BD83E002CBDB1 /* sunBEARUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		6745B523300BD83C002CBDB1 /* PocketSunBEAR */ = {
+		6745B523300BD83C002CBDB1 /* sunBEAR */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6745B547300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "PocketSunBEAR" */;
+			buildConfigurationList = 6745B547300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "sunBEAR" */;
 			buildPhases = (
 				6745B520300BD83C002CBDB1 /* Sources */,
 				6745B521300BD83C002CBDB1 /* Frameworks */,
@@ -110,16 +110,16 @@
 			fileSystemSynchronizedGroups = (
 				6745B526300BD83C002CBDB1 /* PocketSunBEAR */,
 			);
-			name = PocketSunBEAR;
+			name = sunBEAR;
 			packageProductDependencies = (
 			);
 			productName = PocketSunBEAR;
-			productReference = 6745B524300BD83C002CBDB1 /* PocketSunBEAR.app */;
+			productReference = 6745B524300BD83C002CBDB1 /* sunBEAR.app */;
 			productType = "com.apple.product-type.application";
 		};
-		6745B532300BD83E002CBDB1 /* PocketSunBEARTests */ = {
+		6745B532300BD83E002CBDB1 /* sunBEARTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6745B54A300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "PocketSunBEARTests" */;
+			buildConfigurationList = 6745B54A300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "sunBEARTests" */;
 			buildPhases = (
 				6745B52F300BD83E002CBDB1 /* Sources */,
 				6745B530300BD83E002CBDB1 /* Frameworks */,
@@ -133,16 +133,16 @@
 			fileSystemSynchronizedGroups = (
 				6745B536300BD83E002CBDB1 /* PocketSunBEARTests */,
 			);
-			name = PocketSunBEARTests;
+			name = sunBEARTests;
 			packageProductDependencies = (
 			);
 			productName = PocketSunBEARTests;
-			productReference = 6745B533300BD83E002CBDB1 /* PocketSunBEARTests.xctest */;
+			productReference = 6745B533300BD83E002CBDB1 /* sunBEARTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		6745B53C300BD83E002CBDB1 /* PocketSunBEARUITests */ = {
+		6745B53C300BD83E002CBDB1 /* sunBEARUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 6745B54D300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "PocketSunBEARUITests" */;
+			buildConfigurationList = 6745B54D300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "sunBEARUITests" */;
 			buildPhases = (
 				6745B539300BD83E002CBDB1 /* Sources */,
 				6745B53A300BD83E002CBDB1 /* Frameworks */,
@@ -156,11 +156,11 @@
 			fileSystemSynchronizedGroups = (
 				6745B540300BD83E002CBDB1 /* PocketSunBEARUITests */,
 			);
-			name = PocketSunBEARUITests;
+			name = sunBEARUITests;
 			packageProductDependencies = (
 			);
 			productName = PocketSunBEARUITests;
-			productReference = 6745B53D300BD83E002CBDB1 /* PocketSunBEARUITests.xctest */;
+			productReference = 6745B53D300BD83E002CBDB1 /* sunBEARUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 6745B51F300BD83C002CBDB1 /* Build configuration list for PBXProject "PocketSunBEAR" */;
+			buildConfigurationList = 6745B51F300BD83C002CBDB1 /* Build configuration list for PBXProject "sunBEAR" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				6745B523300BD83C002CBDB1 /* PocketSunBEAR */,
-				6745B532300BD83E002CBDB1 /* PocketSunBEARTests */,
-				6745B53C300BD83E002CBDB1 /* PocketSunBEARUITests */,
+				6745B523300BD83C002CBDB1 /* sunBEAR */,
+				6745B532300BD83E002CBDB1 /* sunBEARTests */,
+				6745B53C300BD83E002CBDB1 /* sunBEARUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		6745B535300BD83E002CBDB1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 6745B523300BD83C002CBDB1 /* PocketSunBEAR */;
+			target = 6745B523300BD83C002CBDB1 /* sunBEAR */;
 			targetProxy = 6745B534300BD83E002CBDB1 /* PBXContainerItemProxy */;
 		};
 		6745B53F300BD83E002CBDB1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 6745B523300BD83C002CBDB1 /* PocketSunBEAR */;
+			target = 6745B523300BD83C002CBDB1 /* sunBEAR */;
 			targetProxy = 6745B53E300BD83E002CBDB1 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -399,10 +399,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Pocket sunBEAR";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -431,10 +431,10 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "Pocket sunBEAR";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIFileSharingEnabled = YES;
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_UIFileSharingEnabled = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
@@ -473,7 +473,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PocketSunBEAR.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PocketSunBEAR";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/sunBEAR.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/sunBEAR";
 			};
 			name = Debug;
 		};
@@ -497,7 +497,7 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/PocketSunBEAR.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/PocketSunBEAR";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/sunBEAR.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/sunBEAR";
 			};
 			name = Release;
 		};
@@ -548,7 +548,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		6745B51F300BD83C002CBDB1 /* Build configuration list for PBXProject "PocketSunBEAR" */ = {
+		6745B51F300BD83C002CBDB1 /* Build configuration list for PBXProject "sunBEAR" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6745B545300BD83E002CBDB1 /* Debug */,
@@ -557,7 +557,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6745B547300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "PocketSunBEAR" */ = {
+		6745B547300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "sunBEAR" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6745B548300BD83E002CBDB1 /* Debug */,
@@ -566,7 +566,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6745B54A300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "PocketSunBEARTests" */ = {
+		6745B54A300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "sunBEARTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6745B54B300BD83E002CBDB1 /* Debug */,
@@ -575,7 +575,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		6745B54D300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "PocketSunBEARUITests" */ = {
+		6745B54D300BD83E002CBDB1 /* Build configuration list for PBXNativeTarget "sunBEARUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6745B54E300BD83E002CBDB1 /* Debug */,

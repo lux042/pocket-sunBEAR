@@ -64,7 +64,7 @@ final class ScrapeCoordinator {
                 context.insert(item)
                 if downloadPDFs, !document.pdfURLs.isEmpty {
                     status = "Downloading PDF for \(completed + 1) of \(total)…"
-                    let result = await pdfDownloader.download(document.pdfURLs, title: item.title, identifier: item.identifier, referer: finalURL)
+                    let result = await pdfDownloader.download(document.pdfURLs, title: item.title, identifier: item.identifier, sessionName: session.name, referer: finalURL)
                     item.localPDFPaths = result.paths
                     item.pdfDownloadError = result.errors.joined(separator: "\n")
                 }
