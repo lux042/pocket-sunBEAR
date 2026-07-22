@@ -5,6 +5,7 @@ import SwiftData
 final class LibraryCollection {
     var name: String
     var createdAt: Date
+    var pagesScraped: Int = 1
     @Relationship(deleteRule: .nullify, inverse: \ResearchSession.libraryCollection) var sessions: [ResearchSession]
 
     init(name: String, createdAt: Date = .now, sessions: [ResearchSession] = []) {
@@ -23,11 +24,12 @@ final class ResearchSession {
     var libraryCollection: LibraryCollection?
     @Relationship(deleteRule: .cascade, inverse: \ResearchItem.session) var items: [ResearchItem]
 
-    init(name: String, sourceName: String, searchURL: String, createdAt: Date = .now, items: [ResearchItem] = [], libraryCollection: LibraryCollection? = nil) {
+    init(name: String, sourceName: String, searchURL: String, createdAt: Date = .now, pagesScraped: Int = 1, items: [ResearchItem] = [], libraryCollection: LibraryCollection? = nil) {
         self.name = name
         self.sourceName = sourceName
         self.searchURL = searchURL
         self.createdAt = createdAt
+        self.pagesScraped = pagesScraped
         self.items = items
         self.libraryCollection = libraryCollection
     }

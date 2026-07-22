@@ -34,6 +34,16 @@ enum ResearchSource: String, CaseIterable, Identifiable, Codable {
         }
     }
 
+    func nextPage(in html: String, baseURL: URL) -> URL? {
+        switch self {
+        case .cia: CIAHTMLParser.nextPage(in: html, baseURL: baseURL)
+        case .jstor: JSTORHTMLParser.nextPage(in: html, baseURL: baseURL)
+        case .eric: ERICHTMLParser.nextPage(in: html, baseURL: baseURL)
+        case .pubmed: PubMedHTMLParser.nextPage(in: html, baseURL: baseURL)
+        case .nara: NARAHTMLParser.nextPage(in: html, baseURL: baseURL)
+        }
+    }
+
     func document(from html: String, url: URL) -> ScrapedDocument {
         switch self {
         case .cia: CIAHTMLParser.document(from: html, url: url)

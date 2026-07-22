@@ -8,6 +8,7 @@ struct ContentView: View {
     @State private var showingBrowser = false
     @State private var pendingImport: (html: String, url: URL)?
     @State private var scraper = ScrapeCoordinator()
+    @State private var requestedPageCount = 1
 
     var body: some View {
         TabView {
@@ -20,6 +21,7 @@ struct ContentView: View {
                         Button { showingBrowser = true } label: {
                             Label("Open \(selectedSource.title)", systemImage: "safari")
                         }
+                        Stepper("Search pages: \(requestedPageCount)", value: $requestedPageCount, in: 1...ScrapeCoordinator.maximumSearchPages)
                         Text("Search the source, then tap Import. Pocket sunBEAR saves metadata only—no PDFs.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
@@ -49,7 +51,7 @@ struct ContentView: View {
         .onChange(of: pendingImport?.url) { _, _ in
             guard let pendingImport else { return }
             self.pendingImport = nil
-            Task { await scraper.importSearch(html: pendingImport.html, url: pendingImport.url, source: selectedSource, context: context) }
+            Task { await scraper.importSearch(html: pendingImport.html, url: pendingImport.url, source: selectedSource, pageLimit: requestedPageCount, context: context) }
         }
     }
 }
@@ -155,7 +157,7 @@ private struct SessionLink: View {
         NavigationLink { SessionView(session: session) } label: {
             VStack(alignment: .leading, spacing: 3) {
                 Text(session.name).lineLimit(2)
-                Text("\(session.sourceName) · \(session.items.count) records")
+                Text("\(session.sourceName) · \(session.items.count) records · \(session.pagesScraped) page\(session.pagesScraped == 1 ? "" : "s")")
                     .font(.caption).foregroundStyle(.secondary)
                 Text(session.createdAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())
                     .font(.caption2).foregroundStyle(.tertiary)
