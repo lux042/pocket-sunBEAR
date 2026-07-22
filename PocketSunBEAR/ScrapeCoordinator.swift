@@ -64,9 +64,12 @@ final class ScrapeCoordinator {
                 context.insert(item)
                 if downloadPDFs, !document.pdfURLs.isEmpty {
                     status = "Downloading PDF for \(completed + 1) of \(total)…"
-                    let result = await pdfDownloader.download(document.pdfURLs, title: item.title, identifier: item.identifier, sessionName: session.name, referer: finalURL)
+                    let result = await pdfDownloader.download(document.pdfURLs, title: item.title, identifier: item.identifier, sessionName: session.name, source: item.contentType, referer: finalURL)
                     item.localPDFPaths = result.paths
                     item.pdfDownloadError = result.errors.joined(separator: "\n")
+                    if !result.paths.isEmpty {
+                        item.pdfVerificationStatus = "Verified with PDFKit"
+                    }
                 }
                 completed += 1
             } catch {

@@ -69,6 +69,7 @@ private struct DownloadedPDF: Identifiable {
     let source: String
     var id: String { path }
     var url: URL? { PDFDownloadService.fileURL(for: path) }
+    var verified: Bool { url.map(PDFDownloadService.isVerifiedPDF(at:)) ?? false }
 }
 
 private struct DownloadsView: View {
@@ -111,6 +112,10 @@ private struct DownloadsView: View {
                                     Text(download.title).foregroundStyle(.primary).lineLimit(2)
                                     Text("\(download.source) · \((download.path as NSString).lastPathComponent)")
                                         .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                    if download.verified {
+                                        Label("Verified PDF", systemImage: "checkmark.shield.fill")
+                                            .font(.caption2).foregroundStyle(.green)
+                                    }
                                 }
                             }
                         }
@@ -332,6 +337,10 @@ private struct ItemView: View {
             Section { LabeledContent("Identifier", value: item.identifier); LabeledContent("Type", value: item.documentType); LabeledContent("Collection", value: item.collection); LabeledContent("Date", value: item.publicationDate) }
             if !pdfFiles.isEmpty {
                 Section("PDFs") {
+                    if !pdfFiles.isEmpty && pdfFiles.allSatisfy(PDFDownloadService.isVerifiedPDF(at:)) {
+                        Label("Verified with PDFKit", systemImage: "checkmark.shield.fill")
+                            .foregroundStyle(.green)
+                    }
                     ForEach(pdfFiles, id: \.path) { file in
                         Button { sharePayload = SharePayload([file]) } label: {
                             Label(file.lastPathComponent, systemImage: "doc.richtext")

@@ -48,6 +48,7 @@ final class ResearchItem {
     var pageCount: Int
     var localPDFPaths: [String] = []
     var pdfDownloadError: String = ""
+    var pdfVerificationStatus: String = ""
     var session: ResearchSession?
 
     init(document: ScrapedDocument, session: ResearchSession? = nil) {

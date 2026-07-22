@@ -1,20 +1,23 @@
 import Foundation
+import PDFKit
 import WebKit
 
 struct PDFDownloadService {
     enum DownloadError: LocalizedError {
         case invalidResponse
         case notPDF
+        case unreadablePDF
 
         var errorDescription: String? {
             switch self {
             case .invalidResponse: "The source returned an invalid response."
             case .notPDF: "The source returned a webpage instead of a PDF; login or publisher access may be required."
+            case .unreadablePDF: "The downloaded file has a PDF header but PDFKit could not verify a readable page."
             }
         }
     }
 
-    func download(_ urls: [URL], title: String, identifier: String, sessionName: String, referer: URL) async -> (paths: [String], errors: [String]) {
+    func download(_ urls: [URL], title: String, identifier: String, sessionName: String, source: String, referer: URL) async -> (paths: [String], errors: [String]) {
         guard !urls.isEmpty else { return ([], []) }
         let cookies = await websiteCookies()
         var paths: [String] = []
@@ -32,7 +35,15 @@ struct PDFDownloadService {
 
                 let (temporaryURL, response) = try await URLSession.shared.download(for: request)
                 guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else { throw DownloadError.invalidResponse }
-                guard isPDF(at: temporaryURL) else { throw DownloadError.notPDF }
+                let contentType = http.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
+                if contentType.contains("text/html") || contentType.contains("application/xhtml") { throw DownloadError.notPDF }
+                if ["JSTOR", "PubMed"].contains(source),
+                   let finalURL = http.url,
+                   finalURL.path.lowercased().contains("login") || finalURL.path.lowercased().contains("signin") {
+                    throw DownloadError.notPDF
+                }
+                guard hasPDFHeader(at: temporaryURL) else { throw DownloadError.notPDF }
+                guard Self.isVerifiedPDF(at: temporaryURL) else { throw DownloadError.unreadablePDF }
 
                 let relativePath = try save(temporaryURL, title: title, identifier: identifier, sessionName: sessionName, index: index)
                 paths.append(relativePath)
@@ -47,6 +58,14 @@ struct PDFDownloadService {
         guard let documents = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return nil }
         let url = documents.appendingPathComponent(relativePath)
         return FileManager.default.fileExists(atPath: url.path) ? url : nil
+    }
+
+    static func isVerifiedPDF(at url: URL) -> Bool {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
+        defer { try? handle.close() }
+        guard (try? handle.read(upToCount: 5)) == Data("%PDF-".utf8) else { return false }
+        guard let document = PDFDocument(url: url), document.pageCount > 0 else { return false }
+        return true
     }
 
     private func save(_ temporaryURL: URL, title: String, identifier: String, sessionName: String, index: Int) throws -> String {
@@ -68,7 +87,7 @@ struct PDFDownloadService {
         return "Pocket sunBEAR PDFs/\(sessionFolder)/\(destination.lastPathComponent)"
     }
 
-    private func isPDF(at url: URL) -> Bool {
+    private func hasPDFHeader(at url: URL) -> Bool {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return false }
         defer { try? handle.close() }
         return (try? handle.read(upToCount: 5)) == Data("%PDF-".utf8)
