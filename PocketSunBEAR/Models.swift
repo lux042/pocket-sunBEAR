@@ -2,19 +2,34 @@ import Foundation
 import SwiftData
 
 @Model
+final class LibraryCollection {
+    var name: String
+    var createdAt: Date
+    @Relationship(deleteRule: .nullify, inverse: \ResearchSession.libraryCollection) var sessions: [ResearchSession]
+
+    init(name: String, createdAt: Date = .now, sessions: [ResearchSession] = []) {
+        self.name = name
+        self.createdAt = createdAt
+        self.sessions = sessions
+    }
+}
+
+@Model
 final class ResearchSession {
     var name: String
     var sourceName: String
     var searchURL: String
     var createdAt: Date
+    var libraryCollection: LibraryCollection?
     @Relationship(deleteRule: .cascade, inverse: \ResearchItem.session) var items: [ResearchItem]
 
-    init(name: String, sourceName: String, searchURL: String, createdAt: Date = .now, items: [ResearchItem] = []) {
+    init(name: String, sourceName: String, searchURL: String, createdAt: Date = .now, items: [ResearchItem] = [], libraryCollection: LibraryCollection? = nil) {
         self.name = name
         self.sourceName = sourceName
         self.searchURL = searchURL
         self.createdAt = createdAt
         self.items = items
+        self.libraryCollection = libraryCollection
     }
 }
 

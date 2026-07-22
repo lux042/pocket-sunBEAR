@@ -4,7 +4,7 @@ import SwiftUI
 @main
 struct PocketSunBEARApp: App {
     var body: some Scene {
-        WindowGroup { ContentView() }
-            .modelContainer(for: [ResearchSession.self, ResearchItem.self])
+        WindowGroup { ContentView().preferredColorScheme(.dark) }
+            .modelContainer(for: [LibraryCollection.self, ResearchSession.self, ResearchItem.self])
     }
 }

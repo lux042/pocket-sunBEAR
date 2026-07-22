@@ -20,7 +20,7 @@ struct ContentView: View {
                         Button { showingBrowser = true } label: {
                             Label("Open \(selectedSource.title)", systemImage: "safari")
                         }
-                        Text("Search on the source website, then tap Import. Pocket sunBEAR saves metadata only—no PDFs.")
+                        Text("Search the source, then tap Import. Pocket sunBEAR saves metadata only—no PDFs.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     if scraper.isRunning || scraper.completed > 0 {
@@ -38,18 +38,13 @@ struct ContentView: View {
             }
             .tabItem { Label("Research", systemImage: "magnifyingglass") }
 
-            NavigationStack {
-                List {
-                    ForEach(sessions) { SessionLink(session: $0) }
-                    .onDelete { offsets in offsets.map { sessions[$0] }.forEach(context.delete) }
-                }
-                .overlay { if sessions.isEmpty { ContentUnavailableView("Library is empty", systemImage: "books.vertical") } }
-                .navigationTitle("Library")
-            }
-            .tabItem { Label("Library", systemImage: "books.vertical") }
+            NavigationStack { LibraryView() }
+                .tabItem { Label("Library", systemImage: "books.vertical") }
         }
+        .preferredColorScheme(.dark)
         .sheet(isPresented: $showingBrowser) {
             BrowserView(source: selectedSource) { html, url in pendingImport = (html, url) }
+                .preferredColorScheme(.dark)
         }
         .onChange(of: pendingImport?.url) { _, _ in
             guard let pendingImport else { return }
@@ -59,16 +54,111 @@ struct ContentView: View {
     }
 }
 
+private enum LibrarySort: String, CaseIterable, Identifiable {
+    case newest, oldest, name, records
+    var id: Self { self }
+    var title: String { rawValue.capitalized }
+}
+
+private struct LibraryView: View {
+    @Environment(\.modelContext) private var context
+    @Query(sort: \ResearchSession.createdAt, order: .reverse) private var sessions: [ResearchSession]
+    @Query(sort: \LibraryCollection.name) private var collections: [LibraryCollection]
+    @State private var search = ""
+    @State private var sort = LibrarySort.newest
+    @State private var showingNewCollection = false
+    @State private var newCollectionName = ""
+    @State private var renamingSession: ResearchSession?
+    @State private var renameText = ""
+
+    private var displayedSessions: [ResearchSession] {
+        let filtered = search.isEmpty ? sessions : sessions.filter { session in
+            session.name.localizedCaseInsensitiveContains(search) ||
+            session.sourceName.localizedCaseInsensitiveContains(search) ||
+            session.items.contains { $0.title.localizedCaseInsensitiveContains(search) || $0.collection.localizedCaseInsensitiveContains(search) || $0.identifier.localizedCaseInsensitiveContains(search) }
+        }
+        switch sort {
+        case .newest: return filtered.sorted { $0.createdAt > $1.createdAt }
+        case .oldest: return filtered.sorted { $0.createdAt < $1.createdAt }
+        case .name: return filtered.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        case .records: return filtered.sorted { $0.items.count > $1.items.count }
+        }
+    }
+
+    var body: some View {
+        List {
+            ForEach(collections) { collection in
+                DisclosureGroup {
+                    let members = displayedSessions.filter { $0.libraryCollection?.persistentModelID == collection.persistentModelID }
+                    if members.isEmpty { Text("No matching sessions").font(.caption).foregroundStyle(.secondary) }
+                    ForEach(members) { session in
+                        SessionLink(session: session)
+                            .swipeActions {
+                                Button(role: .destructive) { context.delete(session) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                    }
+                } label: {
+                    Label("\(collection.name) (\(collection.sessions.count))", systemImage: "folder.fill")
+                }
+                .contextMenu {
+                    Button("Delete Collection", role: .destructive) { context.delete(collection) }
+                }
+            }
+            let unfiled = displayedSessions.filter { $0.libraryCollection == nil }
+            if !unfiled.isEmpty {
+                Section("Unfiled") {
+                    ForEach(unfiled) { session in
+                        SessionLink(session: session)
+                            .swipeActions {
+                                Button(role: .destructive) { context.delete(session) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
+                            }
+                    }
+                }
+            }
+        }
+        .overlay { if sessions.isEmpty { ContentUnavailableView("Library is empty", systemImage: "books.vertical") } }
+        .navigationTitle("Library")
+        .searchable(text: $search, prompt: "Sessions, titles, identifiers")
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Menu {
+                    Picker("Sort", selection: $sort) { ForEach(LibrarySort.allCases) { Text($0.title).tag($0) } }
+                } label: { Label("Sort", systemImage: "arrow.up.arrow.down") }
+                Button { showingNewCollection = true } label: { Label("New Collection", systemImage: "folder.badge.plus") }
+            }
+        }
+        .alert("New collection", isPresented: $showingNewCollection) {
+            TextField("Collection name", text: $newCollectionName)
+            Button("Cancel", role: .cancel) { newCollectionName = "" }
+            Button("Create") { createCollection() }.disabled(newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+        .alert("Rename session", isPresented: Binding(get: { renamingSession != nil }, set: { if !$0 { renamingSession = nil } })) {
+            TextField("Session name", text: $renameText)
+            Button("Cancel", role: .cancel) { renamingSession = nil }
+            Button("Rename") { renamingSession?.name = renameText.trimmingCharacters(in: .whitespacesAndNewlines); renamingSession = nil }
+        }
+    }
+
+    private func createCollection() {
+        context.insert(LibraryCollection(name: newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)))
+        newCollectionName = ""
+    }
+}
+
 private struct SessionLink: View {
     let session: ResearchSession
     var body: some View {
-        NavigationLink {
-            SessionView(session: session)
-        } label: {
-            VStack(alignment: .leading) {
-                Text(session.name).lineLimit(1)
-                Text("\(session.items.count) records · \(session.createdAt.formatted(date: .abbreviated, time: .shortened))")
+        NavigationLink { SessionView(session: session) } label: {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(session.name).lineLimit(2)
+                Text("\(session.sourceName) · \(session.items.count) records")
                     .font(.caption).foregroundStyle(.secondary)
+                Text(session.createdAt, format: .dateTime.month(.abbreviated).day().year().hour().minute())
+                    .font(.caption2).foregroundStyle(.tertiary)
             }
         }
     }
@@ -76,37 +166,50 @@ private struct SessionLink: View {
 
 private struct SessionView: View {
     let session: ResearchSession
+    @Query(sort: \LibraryCollection.name) private var collections: [LibraryCollection]
+    @State private var recordSearch = ""
     @State private var shareItems: [Any] = []
     @State private var showingShare = false
+    @State private var showingRename = false
+    @State private var renameText = ""
+
+    private var items: [ResearchItem] {
+        session.items.filter { recordSearch.isEmpty || $0.title.localizedCaseInsensitiveContains(recordSearch) || $0.identifier.localizedCaseInsensitiveContains(recordSearch) || $0.collection.localizedCaseInsensitiveContains(recordSearch) || $0.abstractText.localizedCaseInsensitiveContains(recordSearch) }.sorted { $0.title < $1.title }
+    }
 
     var body: some View {
-        List(session.items.sorted { $0.title < $1.title }) { item in
-            NavigationLink {
-                ItemView(item: item)
-            } label: {
-                VStack(alignment: .leading) {
-                    Text(item.title)
-                    Text(item.collection).font(.caption).foregroundStyle(.secondary)
-                }
+        List(items) { item in
+            NavigationLink { ItemView(item: item) } label: {
+                VStack(alignment: .leading) { Text(item.title); Text(item.collection).font(.caption).foregroundStyle(.secondary) }
             }
         }
+        .overlay { if items.isEmpty { ContentUnavailableView("No matching records", systemImage: "doc.text.magnifyingglass") } }
         .navigationTitle(session.name)
+        .searchable(text: $recordSearch, prompt: "Title, identifier, or text")
         .toolbar {
             Menu {
-                Button("EndNote file") { share(kind: "EndNote") }
-                Button("TSV file") { share(kind: "TSV") }
-            } label: { Label("Export", systemImage: "square.and.arrow.up") }
+                Button("Rename Session") { renameText = session.name; showingRename = true }
+                Menu("Move to Collection") {
+                    Button("Unfiled") { session.libraryCollection = nil }
+                    ForEach(collections) { collection in Button(collection.name) { session.libraryCollection = collection } }
+                }
+                Divider()
+                Button("Share EndNote File") { share(kind: "EndNote") }
+                Button("Share TSV File") { share(kind: "TSV") }
+            } label: { Label("Session Actions", systemImage: "ellipsis.circle") }
+        }
+        .alert("Rename session", isPresented: $showingRename) {
+            TextField("Session name", text: $renameText)
+            Button("Cancel", role: .cancel) {}
+            Button("Rename") { session.name = renameText.trimmingCharacters(in: .whitespacesAndNewlines) }
         }
         .sheet(isPresented: $showingShare) { ShareSheet(items: shareItems) }
     }
 
     private func share(kind: String) {
         do {
-            let url = kind == "EndNote"
-                ? try ExportService.temporaryFile(name: session.name, extension: "enw", contents: ExportService.endNote(session.items))
-                : try ExportService.temporaryFile(name: session.name, extension: "tsv", contents: ExportService.tsv(session.items))
-            shareItems = [url]
-            showingShare = true
+            let url = kind == "EndNote" ? try ExportService.temporaryFile(name: session.name, extension: "enw", contents: ExportService.endNote(session.items)) : try ExportService.temporaryFile(name: session.name, extension: "tsv", contents: ExportService.tsv(session.items))
+            shareItems = [url]; showingShare = true
         } catch {}
     }
 }
@@ -116,10 +219,9 @@ private struct ItemView: View {
     var body: some View {
         Form {
             Section { LabeledContent("Identifier", value: item.identifier); LabeledContent("Type", value: item.documentType); LabeledContent("Collection", value: item.collection); LabeledContent("Date", value: item.publicationDate) }
-            if !item.abstractText.isEmpty { Section("Abstract / description") { Text(item.abstractText) } }
+            if !item.abstractText.isEmpty { Section("Abstract / description") { Text(item.abstractText).textSelection(.enabled) } }
             if let url = URL(string: item.recordURL) { Section { Link("Open source record", destination: url) } }
         }
-        .navigationTitle(item.title)
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationTitle(item.title).navigationBarTitleDisplayMode(.inline)
     }
 }

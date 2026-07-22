@@ -44,6 +44,7 @@ private struct WebView: UIViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(currentURL: $currentURL) }
     func makeUIView(context: Context) -> WKWebView {
+        webView.overrideUserInterfaceStyle = .dark
         webView.navigationDelegate = context.coordinator
         webView.load(URLRequest(url: source.homeURL))
         return webView
