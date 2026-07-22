@@ -10,7 +10,7 @@ Supported sources:
 - PubMed
 - National Archives Catalog
 
-PDF downloading is intentionally excluded from the first mobile milestone.
+When **Download available PDFs** is enabled, Pocket sunBEAR downloads direct, authorized PDFs and validates each file before saving it. Downloads appear in the app's **Downloads** tab and in **Files → On My iPhone → Pocket sunBEAR → Pocket sunBEAR PDFs**. Sources that require login, institutional access, or publisher interaction remain available through their source-record links.
 
 ## Development
 

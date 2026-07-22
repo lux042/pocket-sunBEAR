@@ -26,7 +26,7 @@ struct ContentView: View {
                         Toggle("Download available PDFs", isOn: $shouldDownloadPDFs)
                         Text("Open-access PDFs download automatically. Login or publisher-only files remain available through the source record.")
                             .font(.caption).foregroundStyle(.secondary)
-                        Text("Search the source, then tap Import. Pocket sunBEAR saves metadata only—no PDFs.")
+                        Text("Search the source, then tap Import. Pocket sunBEAR saves metadata and, when enabled, downloads accessible PDFs.")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     if scraper.isRunning || scraper.completed > 0 {
@@ -46,6 +46,9 @@ struct ContentView: View {
 
             NavigationStack { LibraryView() }
                 .tabItem { Label("Library", systemImage: "books.vertical") }
+
+            NavigationStack { DownloadsView() }
+                .tabItem { Label("Downloads", systemImage: "arrow.down.doc.fill") }
         }
         .preferredColorScheme(.dark)
         .sheet(isPresented: $showingBrowser) {
@@ -57,6 +60,67 @@ struct ContentView: View {
             self.pendingImport = nil
             Task { await scraper.importSearch(html: pendingImport.html, url: pendingImport.url, source: selectedSource, pageLimit: requestedPageCount, downloadPDFs: shouldDownloadPDFs, context: context) }
         }
+    }
+}
+
+private struct DownloadedPDF: Identifiable {
+    let path: String
+    let title: String
+    let source: String
+    var id: String { path }
+    var url: URL? { PDFDownloadService.fileURL(for: path) }
+}
+
+private struct DownloadsView: View {
+    @Query private var items: [ResearchItem]
+    @State private var search = ""
+    @State private var shareItems: [Any] = []
+    @State private var showingShare = false
+
+    private var downloads: [DownloadedPDF] {
+        items.flatMap { item in
+            item.localPDFPaths.map { DownloadedPDF(path: $0, title: item.title, source: item.contentType) }
+        }
+        .filter { search.isEmpty || $0.title.localizedCaseInsensitiveContains(search) || $0.path.localizedCaseInsensitiveContains(search) || $0.source.localizedCaseInsensitiveContains(search) }
+        .sorted { $0.title.localizedStandardCompare($1.title) == .orderedAscending }
+    }
+
+    var body: some View {
+        List {
+            Section {
+                Label("Also available in Files → On My iPhone → Pocket sunBEAR → Pocket sunBEAR PDFs", systemImage: "folder")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            ForEach(downloads) { download in
+                Button { share(download) } label: {
+                    HStack {
+                        Image(systemName: "doc.richtext.fill").foregroundStyle(.red)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(download.title).foregroundStyle(.primary).lineLimit(2)
+                            Text("\(download.source) · \((download.path as NSString).lastPathComponent)")
+                                .font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
+                }
+            }
+        }
+        .overlay { if downloads.isEmpty { ContentUnavailableView(search.isEmpty ? "No PDFs downloaded" : "No matching PDFs", systemImage: "arrow.down.doc") } }
+        .navigationTitle("Downloads")
+        .searchable(text: $search, prompt: "Title, source, or filename")
+        .toolbar {
+            if !downloads.isEmpty {
+                Button { shareItems = downloads.compactMap(\.url); showingShare = true } label: {
+                    Label("Share All", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
+        .sheet(isPresented: $showingShare) { ShareSheet(items: shareItems) }
+    }
+
+    private func share(_ download: DownloadedPDF) {
+        guard let url = download.url else { return }
+        shareItems = [url]
+        showingShare = true
     }
 }
 
