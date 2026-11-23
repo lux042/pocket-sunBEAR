@@ -1,4 +1,4 @@
-# Pocket sunBEAR 🐻
+# Pocket sunBEAR 
 
 **Research, collected. Wherever you are.**
 
