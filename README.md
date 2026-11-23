@@ -75,10 +75,9 @@ Some research sites require authentication or institutional access. Those pages 
 
 Pocket sunBEAR is an evolving research tool. Site-specific metadata extraction and PDF availability can change as external websites change. Future improvements may focus on parser resilience, accessibility, and research-session usability.
 
-## Related projects
+## Related project
 
-- **[sunBEAR](https://github.com/lux042/sunBEAR)** — the companion cross-platform research project.
-- **[JFK Reader](https://github.com/lux042/JFK-Reader)** — a separate archival research project for collecting and querying JFK assassination records.
+**[sunBEAR](https://github.com/lux042/sunBEAR)** — the companion cross-platform research project.
 
 ---
 
